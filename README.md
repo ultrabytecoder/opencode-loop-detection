@@ -2,35 +2,33 @@
 
 A small [OpenCode](https://opencode.ai) plugin that detects and breaks LLM tool-call loops, useful when running local models (e.g. Qwen via vLLM) that can get stuck repeating the same tool call.
 
+This version targets the **OpenCode V2 plugin API** (`@opencode/plugin`). See [V1 support](#v1-support) below for the legacy plugin.
+
 ## What it does
 
-The plugin hooks into the `tool.execute.before` event and keeps a sliding window of the last 5 tool calls per session. If the same tool is called 3 times in a row with identical arguments, it:
+The plugin registers an `execute.before` tool hook and keeps a sliding window of the last 5 tool calls per session. If the same tool is called 3 times in a row with identical arguments, it:
 
-1. Writes a warning to the app log.
-2. Skips the tool execution and returns a structured error message directly to the LLM, telling it to try a different approach.
+1. Writes a warning to the console.
+2. Throws from the `execute.before` hook: OpenCode skips the tool execution and returns the error message directly to the LLM, telling it to try a different approach.
 
 ## Installation
 
 Copy the plugin into your opencode plugins directory:
 
 ```bash
-mkdir -p ~/.opencode/plugins
-cp loop-detection.ts ~/.opencode/plugins/
+mkdir -p ~/.config/opencode/plugins
+cp loop-detection.ts ~/.config/opencode/plugins/
 ```
 
 That's it — opencode picks it up automatically.
 
 ## Configuration
 
-Make sure the native `doom_loop` permission is set in your opencode configuration:
+No additional permission rule is needed for this plugin in OpenCode V2.
 
-```json
-{
-  "permission": {
-    "doom_loop": "ask"
-  }
-}
-```
+## V1 support
+
+The OpenCode V1 plugin API (`@opencode-ai/plugin`) is not compatible with this version. On V1, keep the original plugin, which returns `{ error }` from the hook instead of throwing and logs through `client.app.log`.
 
 ## Tuning
 
